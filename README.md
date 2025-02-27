@@ -31,6 +31,3 @@ Feel free to submit issues, feature requests, or pull requests to enhance this s
 
 ## 📜 License
 This project is licensed under the MIT License.
-
----
-Made with ❤️ by Mathieu

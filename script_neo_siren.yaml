@@ -1,0 +1,132 @@
+play_neo_siren:
+  alias: Trigger NEO Siren
+  description: Trigger a NEO NAS-AB02B2 siren under Zigbee2MQTT
+  mode: queued
+  max: 10
+  fields:
+    device_id:
+      name: Siren
+      description: Select a NEO NAS-AB02B2 siren
+      required: true
+      selector:
+        device:
+          filter:
+            integration: mqtt
+            manufacturer: Neo
+            model: Alarm (NAS-AB02B2)
+    melody:
+      name: Melody
+      description: Select a melody
+      required: true
+      selector:
+        select:
+          options:
+          - label: 1 - Für Elise
+            value: '1'
+          - label: 2 - Big Ben
+            value: '2'
+          - label: 3 - Ring Ring
+            value: '3'
+          - label: 4 - Lone Ranger
+            value: '4'
+          - label: 5 - Turkish March
+            value: '5'
+          - label: 6 - High Pitch Siren
+            value: '6'
+          - label: 7 - Red Alert
+            value: '7'
+          - label: 8 - Cricket
+            value: '8'
+          - label: 9 - Beep Beep
+            value: '9'
+          - label: 10 - Dogs
+            value: '10'
+          - label: 11 - Police
+            value: '11'
+          - label: 12 - Chime
+            value: '12'
+          - label: 13 - Phone Ring
+            value: '13'
+          - label: 14 - Firetruck
+            value: '14'
+          - label: 15 - Clock Chime
+            value: '15'
+          - label: 16 - Alarm Clock
+            value: '16'
+          - label: 17 - Psycho
+            value: '17'
+          - label: 18 - Doorbell
+            value: '18'
+    duration:
+      name: Duration
+      description: Duration in seconds
+      required: true
+      default: 1
+      selector:
+        number:
+          min: 1
+          max: 1800
+          step: 1
+          mode: slider
+    volume:
+      name: Volume
+      description: Volume level
+      required: true
+      default: low
+      selector:
+        select:
+          options:
+          - low
+          - medium
+          - high
+          mode: dropdown
+  sequence:
+  - variables:
+      device_name: '{{ device_attr(device_id, ''name_by_user'') or device_attr(device_id,
+        ''name'') }}'
+      entity_name: '{{ device_name | lower | replace('' '', ''_'') }}'
+      initial_melody: '{{ states(''select.'' ~ entity_name ~ ''_melody'') }}'
+      initial_volume: '{{ states(''select.'' ~ entity_name ~ ''_volume'') }}'
+  - data:
+      topic: zigbee2mqtt/{{ device_name }}/set
+      payload: '{{ { "melody": melody | int } | tojson }}
+
+        '
+    action: mqtt.publish
+  - delay: '00:00:00.100'
+  - data:
+      topic: zigbee2mqtt/{{ device_name }}/set
+      payload: '{{ { "volume": volume } | tojson }}
+
+        '
+    action: mqtt.publish
+  - delay: '00:00:00.100'
+  - data:
+      topic: zigbee2mqtt/{{ device_name }}/set
+      payload: '{{ { "duration": duration | int } | tojson }}
+
+        '
+    action: mqtt.publish
+  - delay: '00:00:00.100'
+  - data:
+      topic: zigbee2mqtt/{{ device_name }}/set
+      payload: '{{ { "alarm": true } | tojson }}
+
+        '
+    action: mqtt.publish
+  - delay:
+      seconds: 5
+  - wait_template: '{{ is_state(''switch.'' ~ entity_name ~ ''_alarm'', ''off'') }}'
+  - data:
+      topic: zigbee2mqtt/{{ device_name }}/set
+      payload: '{{ { "melody": initial_melody | int } | tojson }}
+
+        '
+    action: mqtt.publish
+  - delay: '00:00:00.100'
+  - data:
+      topic: zigbee2mqtt/{{ device_name }}/set
+      payload: '{{ { "volume": initial_volume } | tojson }}
+
+        '
+    action: mqtt.publish

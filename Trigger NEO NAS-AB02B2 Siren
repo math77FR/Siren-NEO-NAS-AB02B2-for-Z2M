@@ -74,9 +74,39 @@ blueprint:
             - high
 
 sequence:
-  - service: script.play_neo_siren
-    data:
-      device_id: !input device_id
-      melody: !input melody
-      duration: !input duration
-      volume: !input volume
+  - variables:
+      device_name: '{{ device_attr(device_id, ''name_by_user'') or device_attr(device_id, ''name'') }}'
+      entity_name: '{{ device_name | lower | replace('' '', ''_'') }}'
+      initial_melody: '{{ states(''select.'' ~ entity_name ~ ''_melody'') }}'
+      initial_volume: '{{ states(''select.'' ~ entity_name ~ ''_volume'') }}'
+  - data:
+      topic: zigbee2mqtt/{{ device_name }}/set
+      payload: '{{ { "melody": melody | int } | tojson }}'
+    service: mqtt.publish
+  - delay: '00:00:00.100'
+  - data:
+      topic: zigbee2mqtt/{{ device_name }}/set
+      payload: '{{ { "volume": volume } | tojson }}'
+    service: mqtt.publish
+  - delay: '00:00:00.100'
+  - data:
+      topic: zigbee2mqtt/{{ device_name }}/set
+      payload: '{{ { "duration": duration | int } | tojson }}'
+    service: mqtt.publish
+  - delay: '00:00:00.100'
+  - data:
+      topic: zigbee2mqtt/{{ device_name }}/set
+      payload: '{{ { "alarm": true } | tojson }}'
+    service: mqtt.publish
+  - delay:
+      seconds: 5
+  - wait_template: '{{ is_state(''switch.'' ~ entity_name ~ ''_alarm'', ''off'') }}'
+  - data:
+      topic: zigbee2mqtt/{{ device_name }}/set
+      payload: '{{ { "melody": initial_melody | int } | tojson }}'
+    service: mqtt.publish
+  - delay: '00:00:00.100'
+  - data:
+      topic: zigbee2mqtt/{{ device_name }}/set
+      payload: '{{ { "volume": initial_volume } | tojson }}'
+    service: mqtt.publish

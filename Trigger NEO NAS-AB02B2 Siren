@@ -1,23 +1,19 @@
-play_neo_siren:
-  alias: Trigger NEO Siren
+blueprint:
+  name: NEO Siren Trigger Blueprint
   description: Trigger a NEO NAS-AB02B2 siren under Zigbee2MQTT
-  mode: queued
-  max: 10
-  fields:
+  domain: script
+  input:
     device_id:
       name: Siren
       description: Select a NEO NAS-AB02B2 siren
-      required: true
       selector:
         device:
-          filter:
-            integration: mqtt
-            manufacturer: Neo
-            model: Alarm (NAS-AB02B2)
+          integration: mqtt
+          manufacturer: Neo
+          model: Alarm (NAS-AB02B2)
     melody:
       name: Melody
       description: Select a melody
-      required: true
       selector:
         select:
           options:
@@ -60,18 +56,15 @@ play_neo_siren:
     duration:
       name: Duration
       description: Duration in seconds
-      required: true
       default: 1
       selector:
         number:
           min: 1
           max: 1800
           step: 1
-          mode: slider
     volume:
       name: Volume
       description: Volume level
-      required: true
       default: low
       selector:
         select:
@@ -79,41 +72,11 @@ play_neo_siren:
             - low
             - medium
             - high
-          mode: dropdown
-  sequence:
-    - variables:
-        device_name: '{{ device_attr(device_id, ''name_by_user'') or device_attr(device_id, ''name'') }}'
-        entity_name: '{{ device_name | lower | replace('' '', ''_'') }}'
-        initial_melody: '{{ states(''select.'' ~ entity_name ~ ''_melody'') }}'
-        initial_volume: '{{ states(''select.'' ~ entity_name ~ ''_volume'') }}'
-    - data:
-        topic: zigbee2mqtt/{{ device_name }}/set
-        payload: '{{ { "melody": melody | int } | tojson }}'
-      action: mqtt.publish
-    - delay: '00:00:00.100'
-    - data:
-        topic: zigbee2mqtt/{{ device_name }}/set
-        payload: '{{ { "volume": volume } | tojson }}'
-      action: mqtt.publish
-    - delay: '00:00:00.100'
-    - data:
-        topic: zigbee2mqtt/{{ device_name }}/set
-        payload: '{{ { "duration": duration | int } | tojson }}'
-      action: mqtt.publish
-    - delay: '00:00:00.100'
-    - data:
-        topic: zigbee2mqtt/{{ device_name }}/set
-        payload: '{{ { "alarm": true } | tojson }}'
-      action: mqtt.publish
-    - delay:
-        seconds: 5
-    - wait_template: '{{ is_state(''switch.'' ~ entity_name ~ ''_alarm'', ''off'') }}'
-    - data:
-        topic: zigbee2mqtt/{{ device_name }}/set
-        payload: '{{ { "melody": initial_melody | int } | tojson }}'
-      action: mqtt.publish
-    - delay: '00:00:00.100'
-    - data:
-        topic: zigbee2mqtt/{{ device_name }}/set
-        payload: '{{ { "volume": initial_volume } | tojson }}'
-      action: mqtt.publish
+
+sequence:
+  - service: script.play_neo_siren
+    data:
+      device_id: !input device_id
+      melody: !input melody
+      duration: !input duration
+      volume: !input volume

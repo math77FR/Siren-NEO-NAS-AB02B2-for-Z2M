@@ -26,9 +26,6 @@ With this approach, you create a blueprint that generates a script with fixed pa
 - **Option 1** is ideal if you need specific siren behaviors for different scenarios.
 - **Option 2** is recommended if you want a consistent siren behavior across multiple automations with minimal maintenance.
 
-## 📁 Installation
-1. Copy the `script_neo_siren.yaml` file content.2. Paste it into your `scripts.yaml` file located in `/homeassistant/`.3. Verify the configuration in Home Assistant:   - Go to **Settings > System > Server Control > Check Configuration**.4. Restart Home Assistant to apply the changes.
-
 ## 🤝 Contributions
 Feel free to submit issues, feature requests, or pull requests to enhance this script!
 
